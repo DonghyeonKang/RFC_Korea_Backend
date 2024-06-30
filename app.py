@@ -50,9 +50,9 @@ def getRegistPage():
         print("already translated")
         with open('translated/' + documentNumber + '.html', 'r', encoding='utf-8') as file:
                 translated = file.read()
-                return jsonify({'result': 'true', 'original': original, 'translated': translated})
+                return jsonify({'success': True, 'original': original, 'translated': translated})
     else: 
-        return jsonify({'result': 'false', 'original': original})
+        return jsonify({'success': False, 'original': original})
 
 def translate(documentNumber, target_lang):    
     # HTML 파일 읽기
@@ -106,7 +106,7 @@ def translate(documentNumber, target_lang):
                 print("Error checking status:", status_response.status_code, status_response.text)
                 return
             
-            time.sleep(5)
+            time.sleep(2)
         
         # 번역된 파일 다운로드
         download_url = f"https://api.deepl.com/v2/document/{document_id}/result"
