@@ -69,7 +69,7 @@ class HtmlRepository:
         cursor = self.connection.cursor() # control structure of database SQL 문장을 DB 서버에 전송하기 위한 객체
 
         cursor.execute(
-            "INSERT INTO original(number, content) VALUES('%s', '%s')" % (number))
+            "SELECT EXISTS (SELECT 1 FROM original WHERE document_number = '%s') AS is_exist" % (number))
 
         self.connection.commit() # 쿼리 적용
         self.connection.close() # db 연결해제

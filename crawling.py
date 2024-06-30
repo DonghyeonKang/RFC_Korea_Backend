@@ -18,12 +18,11 @@ def getOriginal(documentNumber):
     url = "https://www.rfc-editor.org/rfc/rfc" + documentNumber + ".html"
 
     driver.get(url)
-    wait = WebDriverWait(driver, 5)  # 5초 동안 대기
-    aram_html = driver.page_source # 웹 페이지의 전체 HTML 소스 코드 가져오기
-    file = open("htmls/" + documentNumber + ".html","w",encoding="utf-8")
-    file.write(aram_html)
+    html = driver.page_source # 웹 페이지의 전체 HTML 소스 코드 가져오기
+    file = open("scrapped/" + documentNumber + ".html", "w", encoding="utf-8")
+    file.write(html)
     driver.quit()
 
-    return aram_html
+    return html
 
 # 
