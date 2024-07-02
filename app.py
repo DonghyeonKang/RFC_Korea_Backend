@@ -1,19 +1,17 @@
 import os
-from flask import Flask
-from flask import request
-from flask import jsonify # Return json form to client
+from flask import Flask, request, jsonify
+from flask_cors import CORS  # flask_cors 모듈에서 CORS를 가져옵니다
 import crawling
 import htmlRepository as HtmlRepository
 from bs4 import BeautifulSoup
 import requests
 import time
-from auth import * 
+from auth import *
+
 app = Flask(__name__)
+CORS(app)
 
-DEEPL_API_URL = "https://api-free.deepl.com/v2/document"
-UPLOAD_FOLDER = 'uploads'
-TRANSLATED_FOLDER = 'translated'
-
+cors = CORS(app, resources={r"/search": {"origins": "*"}})
 
 @app.route('/search', methods=['GET'])
 def getRegistPage():
@@ -22,11 +20,11 @@ def getRegistPage():
     # ------------------------------------------------------- 스크래핑 -------------------------------------------------------
     documentNumber = request.args.get('no')
     if htmlRepository.isExist(documentNumber):
-        with open('scrapped/' + documentNumber +'.html.html', 'r', encoding='utf-8') as file:
+        with open('scrapped/' + documentNumber + '.html.html', 'r', encoding='utf-8') as file:
             original = file.read()
     else:
         original = crawling.getOriginal(documentNumber)
-    print("scrapped")
+    print("스크랩 완료")
 
     # ------------------------------------------------------- 편집 -------------------------------------------------------
     soup = BeautifulSoup(original, 'html.parser')
@@ -39,15 +37,15 @@ def getRegistPage():
     body = body.replace('    ', ' ')
     file = open("edited/" + documentNumber + ".html","w",encoding="utf-8")
     file.write(body)
-    print("edited")
+    print("편집 완료")
 
     # ------------------------------------------------------- 번역 -------------------------------------------------------
     if not os.path.exists('translated/' + documentNumber + '.html'):
         translate(documentNumber, "KO")
-        print("translated")
+        print("번역 완료")
 
     if os.path.exists('translated/' + documentNumber + '.html'):
-        print("already translated")
+        print("이미 번역됨")
         with open('translated/' + documentNumber + '.html', 'r', encoding='utf-8') as file:
                 translated = file.read()
                 return jsonify({'success': True, 'original': original, 'translated': translated})
@@ -97,13 +95,13 @@ def translate(documentNumber, target_lang):
                     if status_result['status'] == 'done':
                         break
                     elif status_result['status'] == 'error':
-                        print("Error during translation:", status_result)
+                        print("번역 중 오류 발생:", status_result)
                         return
                 else:
-                    print("Error: 'status' not found in status response.")
+                    print("오류: 상태 응답에서 'status'를 찾을 수 없습니다.")
                     return
             else:
-                print("Error checking status:", status_response.status_code, status_response.text)
+                print("상태 확인 오류:", status_response.status_code, status_response.text)
                 return
             
             time.sleep(2)
@@ -117,12 +115,12 @@ def translate(documentNumber, target_lang):
                 corrected_text = download_response.text.encode('latin1').decode('utf-8')
                 file.write(corrected_text)
         else:
-            print("Error downloading translated file:", download_response.status_code, download_response.text)
+            print("번역 파일 다운로드 오류:", download_response.status_code, download_response.text)
     elif response.status_code == 403:
-        print("Forbidden: Please check your API key and subscription level.")
+        print("Forbidden: API 키와 구독 레벨을 확인해주세요.")
     else:
-        print("Error:", response.status_code, response.text)
+        print("오류:", response.status_code, response.text)
 
 # 실행 ---------------------------------------------------------
 if __name__ == '__main__':
-    app.run('0.0.0.0',port=8000, debug=True, threaded=True)
+    app.run('0.0.0.0', port=8000, debug=False, threaded=True)
