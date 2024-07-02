@@ -2,3 +2,5 @@ __pycache__
 htmls
 .DS_Store
 auth.py
+db_auth.py
+mysql*
